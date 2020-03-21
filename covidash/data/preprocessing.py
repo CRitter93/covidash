@@ -15,7 +15,7 @@ def get_hospital_list():
     df_hospital_points = pd.DataFrame([item['geometry']['coordinates'] for item in features])
 
     df_hospitals = df_hospital_properites.join(df_hospital_points)
-    return df_hospitals.rename({0:"x",1:"y"},axis=1)
+    return df_hospitals.rename(columns={0:"x",1:"y"})
 
 df_covid = pd.read_csv('data/raw/rki_covid_19.csv')
 
