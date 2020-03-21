@@ -16,6 +16,27 @@ def download_rki_corona_landkreise():
     urllib.request.urlretrieve(url, file_name)
 
 
+def download_rki_corona_landkreise_geo():
+    url = 'https://opendata.arcgis.com/datasets/917fc37a709542548cc3be077a786c17_0.geojson'
+    file_name = os.path.join(DATA_DIR, 'rki_corona_landkreise.geojson')
+    urllib.request.urlretrieve(url, file_name)
+
+
+def download_rki_corona_bundeslaender():
+    url = 'https://opendata.arcgis.com/datasets/ef4b445a53c1406892257fe63129a8ea_0.csv'
+    file_name = os.path.join(DATA_DIR, 'rki_corona_bundeslaender.csv')
+    urllib.request.urlretrieve(url, file_name)
+
+
+def download_rki_corona_bundeslaender_geo():
+    url = 'https://opendata.arcgis.com/datasets/ef4b445a53c1406892257fe63129a8ea_0.geojson'
+    file_name = os.path.join(DATA_DIR, 'rki_corona_bundeslaender.geojson')
+    urllib.request.urlretrieve(url, file_name)
+
+
 if __name__ == '__main__':
     download_rki_covid_19()
     download_rki_corona_landkreise()
+    download_rki_corona_landkreise_geo()
+    download_rki_corona_bundeslaender()
+    download_rki_corona_bundeslaender_geo()
