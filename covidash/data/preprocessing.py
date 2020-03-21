@@ -24,5 +24,4 @@ df_landkreise = pd.read_csv('../../data/raw/rki_corona_landkreise.csv')
 
 df_hospital = get_hospital_list()
 
-print('1')
 
