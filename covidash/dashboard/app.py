@@ -81,15 +81,14 @@ app.layout = html.Div(children=[
 def test_slider_graph(gender_filter, age_filter):
     return figures.update_map(data_store, map_fig, gender_filter=gender_filter, age_filter=age_filter)
 
-# @app.callback(
-#     Output('time-graph', 'figure'),
-#     [Input('map-graph', 'clickData')])
-# def display_click_data(click_data):
-#     print(click_data)
-#     # if click_data:
-#     #     return figures.line_plot(data_store, click_data['points'][0]['customdata'][1])
-#     # else:
-#     #     return figures.line_plot(data_store)
+@app.callback(
+    Output('time-graph', 'figure'),
+    [Input('map-graph', 'selectedData')])
+def display_click_data(selected_data):
+    if selected_data:
+        return figures.line_plot(data_store, [data['location'] for data in selected_data['points']])
+    else:
+        return figures.line_plot(data_store)
 
 
 if __name__ == '__main__':

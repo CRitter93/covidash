@@ -11,12 +11,12 @@ def get_main_map_landkreise(data_store):
                                    featureidkey="properties.OBJECTID",
                                    mapbox_style='open-street-map',
                                    hover_name='GEN',
-                                   hover_data=['cases'],#, 'OBJECTID'],
+                                   hover_data=['cases'],
                                    center=dict(lat=51.1657, lon=10.4515),
                                    zoom=5.5,
                                    labels={'cases': 'Fälle'}
                                    )
-    map_fig.update_layout(height=800, margin={"r": 20, "t": 20, "l": 20, "b": 20})#, clickmode='event+select')
+    map_fig.update_layout(height=800, margin={"r": 20, "t": 20, "l": 20, "b": 20}, clickmode='event+select')
     return map_fig
 
 
@@ -42,13 +42,13 @@ def update_map(data_store, figure, gender_filter='All', age_filter='All', date_f
     return figure
 
 
-def line_plot(data_store, obj_id='All'):
+def line_plot(data_store, obj_ids='All'):
     values = data_store.get('rki_covid_19')
-    if obj_id != 'All':
-        values = values[values.OBJECTID == obj_id]
+    if obj_ids != 'All':
+        values = values[values.OBJECTID.isin(obj_ids)]
     data = values.groupby('date').agg({'cases': 'sum'}).reset_index()
     data.cases = data.cases.cumsum()
     line_plot = go.Figure()
     line_plot.add_trace(go.Scatter(x=data.date, y=data.cases, mode='lines+markers', line_shape='spline'))
-    line_plot.update_layout(title='Anzahl der Covid-19 Fälle in {}'.format('Deutschland' if obj_id == 'All' else values.GEN.values[0]))
+    line_plot.update_layout(title='Anzahl der Covid-19 Fälle in {}'.format('Deutschland' if obj_ids == 'All' else values.GEN.values[0]))
     return line_plot
