@@ -26,7 +26,7 @@ app.layout = html.Div(children=[
                 '''),
 
                 dcc.Link('NPGEO Corona Hub 2020',
-                         href="https://npgeo-corona-npgeo-de.hub.arcgis.com/"],
+                         href="https://npgeo-corona-npgeo-de.hub.arcgis.com/")],
                 className='row'),
 
         html.Div(children=[
