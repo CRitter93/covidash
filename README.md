@@ -8,7 +8,7 @@ Erstere benötigen gute Informationsquellen, um in diesen schweren Zeiten die ri
 Letztere haben ein Recht darauf, Informationen so transparent wie möglich zu erhalten.
 
 Bestehende Dashboards zu Covid-19 in Deutschland bieten dabei nicht ausreichend Interaktivität.
-So hat beispielsweise das [Dashboard des Robert-Koch Instituts](https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4)
+So hat beispielsweise das [Dashboard des Robert-Koch-Instituts](https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4)
 genaue Fallzahlen pro Landkreis, ermöglicht aber keine Einsichten in zeitliche Verläufe einzelner Regionen, Patientengeschlechter oder Patientenaltersgruppen.
 
 Unser Dashboard setzt hier an und erlaubt es dem Nutzer:in interaktiv die zur Verfügung stehenden Daten zu filtern.
@@ -24,7 +24,9 @@ Da es sich bei dem Dashboard aktuell noch um einen Prototypen handelt, schlagen 
 
 #### Erweiterung der verfügbaren Informationen
 * Berechnung von Ausbreitungsrichtung basierend auf Neuinfektionen und geographischen Gegebenheiten (Nachbarschaften der Landkreise, Infrastruktur, ...)
-* Eingliederung weiterer Daten, z.B. anonymisierter Telefondaten zur Analyse der Auswirkung von Bewegungen der Bürger:innen.
+* Eingliederung weiterer Daten, z.B. [anonymisierter Telefondaten](https://www.heise.de/newsticker/meldung/Corona-Krise-Deutsche-Telekom-liefert-anonymisierte-Handydaten-an-RKI-4685191.html)
+zur Analyse der Auswirkung von Bewegungen der Bürger:innen.
 * Automatisches Erkennen und Anzeigen von "positive deviations" (Fälle in denen die Ausbreitung positiv vom Durchschnitt abweicht), um eventuell dort getroffene Maßnahmen anderswo zu wiederholen.
 
 ## Beispiele
+![s1](screenshots/dashboard_screenshot_1.png)
