@@ -20,8 +20,42 @@ def process_rki_covid_19():
             'A05-A14': '05 bis 14',
             'A00-A04': '00 bis 04'
             })
-    covid_19_df.to_csv(os.path.join(DATA_DIR, 'processed', 'rki_covid_19.csv'))
+    covid_19_df.to_csv(os.path.join(DATA_DIR, 'processed', 'rki_covid_19.csv'), index=False)
+
+
+def process_rki_covid_19_dense():
+    covid_19_df = pd.read_csv(os.path.join(DATA_DIR, 'processed', 'rki_covid_19.csv'))
+    date_range = pd.date_range(covid_19_df.date.min(), covid_19_df.date.max())
+
+    # set index to date
+    covid_19_df = covid_19_df.set_index('date')
+    covid_19_df.index = pd.DatetimeIndex(covid_19_df.index)
+
+    dimensions = ['OBJECTID', 'age', 'gender', 'GEN']
+
+    # sort for safety of assignments
+    covid_19_df = covid_19_df.sort_values(dimensions)
+
+    # fill missing dates per dimension
+    covid_19_df = covid_19_df.groupby(['OBJECTID', 'age', 'gender', 'GEN']) \
+        .apply(lambda x: x[['cases', 'deaths']].reindex(date_range).fillna(0)) \
+        .reset_index().rename(columns={'level_4': 'date'})
+
+    # calculate total cases until each point in time per dimension
+    covid_19_df[['total_cases', 'total_deaths']] = covid_19_df.groupby(dimensions)[['cases', 'deaths']].cumsum()
+
+    # calculate window mean of last 4 days
+    covid_19_df[['cases_window_mean', 'deaths_window_mean']] = covid_19_df.groupby(dimensions)[['cases', 'deaths']].rolling(4, min_periods=1).mean().reset_index()[
+        ['cases', 'deaths']]
+
+    # add trend comparing two subsequent days
+    covid_19_df[['cases_trend', 'deaths_trend']] = covid_19_df.groupby(dimensions)[['cases_window_mean', 'deaths_window_mean']] \
+        .apply(lambda x: x[['cases_window_mean', 'deaths_window_mean']] - x[['cases_window_mean', 'deaths_window_mean']].shift(1)) \
+        .reset_index()[['cases_window_mean', 'deaths_window_mean']].fillna(0)
+
+    covid_19_df.to_csv(os.path.join(DATA_DIR, 'processed', 'rki_covid_19_dense.csv'), index=False)
 
 
 if __name__ == '__main__':
     process_rki_covid_19()
+    process_rki_covid_19_dense()
