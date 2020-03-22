@@ -1,6 +1,6 @@
 # CoviDash - ein interaktives Covid-19 Dashboard
 
-Diese Projekt ist im Rahmen des #WirVsVirus Hackathons vom 20. - 22.03.2020 entstanden.
+Diese Projekt ist im Rahmen des [#WirVsVirus Hackathons](https://wirvsvirushackathon.org/) vom 20.-22.03.2020 entstanden.
 
 ## Idee
 Mit unserem Projekt möchten wir zwei verschieden Zielgruppen ansprechen: Personen, die in der Krise Entscheidungen treffen müssen und alle Bürger:innen.

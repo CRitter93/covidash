@@ -113,7 +113,7 @@ def the_curve_line(data_store, filters):
     name_mapping = data_store.get('object_id_to_name_bundesland') if filters.get('granularity') == 'bundesland' else data_store.get('object_id_to_name_landkreis')
     line_plot.add_trace(go.Scatter(x=data.date.astype(str), y=data[column], mode='lines+markers', line_shape='spline'))
     line_plot.update_layout(title=THE_CURVE_TITLE.format(DATA_TYPE_MAPPING.get(filters['data'] if filters.get('data') else 'total'),
-                                                         'Deutschland' if not 'geo' in filters else ', '.join([name_mapping.get(id) for id in filters['geo']])))
+                                                         'Deutschland' if filters is None or not 'geo' in filters else ', '.join([name_mapping.get(id) for id in filters['geo']])))
     return line_plot
 
 
@@ -127,7 +127,7 @@ def the_curve_bar(data_store, filters):
     name_mapping = data_store.get('object_id_to_name_bundesland') if filters.get('granularity') == 'bundesland' else data_store.get('object_id_to_name_landkreis')
     bar_plot.add_trace(go.Bar(x=data.date.astype(str), y=data[column]))
     bar_plot.update_layout(title=THE_CURVE_TITLE.format(DATA_TYPE_MAPPING.get(filters['data'] if filters.get('data') else 'total'),
-                                                        'Deutschland' if not 'geo' in filters else ', '.join([name_mapping.get(id) for id in filters['geo']])))
+                                                        'Deutschland' if filters is None or not 'geo' in filters else ', '.join([name_mapping.get(id) for id in filters['geo']])))
     return bar_plot
 
 
@@ -162,6 +162,6 @@ def update_the_curve(data_store, figure, filters):
     data = values.groupby('date').agg({column: 'sum'}).reset_index().sort_values('date')
     figure['data'][0]['y'] = data[column]
     name_mapping = data_store.get('object_id_to_name_bundesland') if filters.get('granularity') == 'bundesland' else data_store.get('object_id_to_name_landkreis')
-    figure['layout']['title']['text'] = THE_CURVE_TITLE.format(DATA_TYPE_MAPPING.get(filters['data']),
-                                                               'Deutschland' if not 'geo' in filters else ', '.join([name_mapping.get(id) for id in filters['geo']]))
+    figure['layout']['title']['text'] = THE_CURVE_TITLE.format(DATA_TYPE_MAPPING.get(filters['data'] if filters.get('data') else 'total'),
+                                                               'Deutschland' if filters is None or not 'geo' in filters else ', '.join([name_mapping.get(id) for id in filters['geo']]))
     return figure
