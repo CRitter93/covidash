@@ -4,10 +4,12 @@ from pathlib import Path
 
 DATA_DIR = '../../data/raw'
 
+OVERWRITE = True
+
 
 def get_rki_data(url="", file_name=""):
     file_name = os.path.join(DATA_DIR, file_name)
-    if not Path(file_name).is_file():
+    if OVERWRITE or not Path(file_name).is_file():
         urllib.request.urlretrieve(url, file_name)
 
 

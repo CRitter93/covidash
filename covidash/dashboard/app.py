@@ -5,10 +5,9 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 
-import datetime
-
 from covidash.dashboard.data_store import DataStore
 import covidash.dashboard.figures as figures
+from covidash.dashboard.figures import DATA_TYPE_MAPPING
 
 data_store = DataStore('../../data')
 
@@ -20,42 +19,49 @@ app.layout = html.Div(children=[
         html.H1(children='Covid-19 Ausbreitung in Deutschland'),
 
         html.Div(children=[
-                html.Div(children='''
-                Dieses Dashboard dient der Visualisierung und Analyse der zeitlichen und geographischen Ausbreitung von Covid-19 in Deutschland.\n
-                Die Daten stammen vom Robert-Koch Institut und können auf der folgenden Seite abgerufen werden (Stand 20.03.2020): 
-                '''),
+                html.Div(children=[
+                        html.Div(children='''
+                                Dieses Dashboard dient der Visualisierung und Analyse der zeitlichen und geographischen Ausbreitung von Covid-19 in Deutschland.\n
+                                Die Daten stammen vom Robert-Koch Institut und können auf der folgenden Seite abgerufen werden (Stand {}): 
+                                '''.format(data_store.get('latest_date')), className='ten columns'),
 
-                dcc.Link('NPGEO Corona Hub 2020',
-                         href="https://npgeo-corona-npgeo-de.hub.arcgis.com/")],
+                        dcc.Link('NPGEO Corona Hub 2020',
+                                 href="https://npgeo-corona-npgeo-de.hub.arcgis.com/", className='two columns')
+                        ], className='row'),
+                html.Div(children=[
+                        dcc.DatePickerSingle(
+                                id='date-picker',
+                                min_date_allowed=data_store.get('first_date'),
+                                max_date_allowed=data_store.get('latest_date'),
+                                initial_visible_month=data_store.get('latest_date'),
+                                date=str(data_store.get('latest_date')),
+                                display_format='DD.MM.YYYY',
+                                className='two columns'
+                                ),
+                        dcc.Dropdown(
+                                id='data-dropdown',
+                                options=[
+                                        {'label': DATA_TYPE_MAPPING[type], 'value': type} for type in DATA_TYPE_MAPPING
+                                        ],
+                                value='total',
+                                clearable=False,
+                                className='two columns'
+                                ),
+                        dcc.Dropdown(
+                                id='granularity-dropdown',
+                                options=[
+                                        {'label': 'Landkreise', 'value': 'landkreis'},
+                                        {'label': 'Bundesländer', 'value': 'bundesland'}
+                                        ],
+                                value='landkreis',
+                                clearable=False,
+                                className='two columns'
+                                ),
+                        ], className='row')
+
+                ],
+
                 className='row'),
-
-        # html.Div(children=[
-        #         dcc.Dropdown(
-        #                 id='gender-dropdown',
-        #                 options=[
-        #                         {'label': 'Alle Geschlechter', 'value': 'All'},
-        #                         {'label': 'Männlich', 'value': 'M'},
-        #                         {'label': 'Weiblich', 'value': 'W'}
-        #                         ],
-        #                 value='All',
-        #                 className="six columns"
-        #                 ),
-        #
-        #         dcc.Dropdown(
-        #                 id='age-dropdown',
-        #                 options=[
-        #                         {'label': 'Alle Altersgruppen', 'value': 'All'},
-        #                         {'label': '0-4', 'value': 'A00-A04'},
-        #                         {'label': '5-14', 'value': 'A05-A14'},
-        #                         {'label': '15-34', 'value': 'A15-A34'},
-        #                         {'label': '35-59', 'value': 'A35-A59'},
-        #                         {'label': '60-79', 'value': 'A60-A79'},
-        #                         {'label': '80+', 'value': 'A80+'}
-        #                         ],
-        #                 value='All',
-        #                 className="six columns"
-        #                 )],
-        #         className='row'),
 
         html.Div(children=[
                 dcc.Graph(
@@ -65,8 +71,8 @@ app.layout = html.Div(children=[
                         ),
                 html.Div(children=[
                         dcc.Graph(
-                                id='time-graph',
-                                figure=figures.line_plot(data_store, {}),
+                                id='the-curve-graph',
+                                figure=figures.the_curve_line(data_store, {}),
                                 className='row'
                                 ),
                         html.Div(children=[
@@ -87,16 +93,21 @@ app.layout = html.Div(children=[
                 style={'height': 'auto'}),
 
         # hidden div for storing filtering
-        html.Div(id='filter-values', style={'display': 'none'})
+        html.Div(children='{}', id='filter-values', style={'display': 'none'})
 
-        ], className='twelve columns', style={'height': 'auto'})
+        ], style={'height': 'auto'})
 
 
 @app.callback(
         Output('filter-values', 'children'),
-        [Input('map-graph', 'selectedData'), Input('gender-graph', 'selectedData'), Input('age-graph', 'selectedData')]
+        [Input('map-graph', 'selectedData'), Input('gender-graph', 'selectedData'), Input('age-graph', 'selectedData'), Input('date-picker', 'date'),
+         Input('data-dropdown', 'value'), Input('granularity-dropdown', 'value')],
+        [State('filter-values', 'children')]
         )
-def update_filtering(geo_selection, gender_selection, age_selection):
+def update_filtering(geo_selection, gender_selection, age_selection, date, data, granularity, current_filters):
+    current_filters = json.loads(current_filters)
+    current_granularity = current_filters.get('granularity')
+    current_data = current_filters.get('data')
     filters = {}
     if geo_selection:
         filters['geo'] = [data['location'] for data in geo_selection['points']]
@@ -104,19 +115,52 @@ def update_filtering(geo_selection, gender_selection, age_selection):
         filters['gender'] = [data['x'] for data in gender_selection['points']]
     if age_selection:
         filters['age'] = [data['x'] for data in age_selection['points']]
+    if date:
+        filters['date'] = date
+    if data:
+        filters['data'] = data
+        if current_data != data:
+            filters['data_changed'] = True
+    if granularity:
+        filters['granularity'] = granularity
+        if current_granularity != granularity:
+            filters['granularity_changed'] = True
+        # clear geo filters
+        if filters.get('geo') is not None:
+            del filters['geo']
     return json.dumps(filters)
 
 
 @app.callback(
-        [Output('time-graph', 'figure'), Output('gender-graph', 'figure'), Output('age-graph', 'figure'), Output('map-graph', 'figure')],
+        [Output('the-curve-graph', 'figure'), Output('gender-graph', 'figure'), Output('age-graph', 'figure'), Output('map-graph', 'figure')],
         [Input('filter-values', 'children')],
-        [State('time-graph', 'figure'), State('gender-graph', 'figure'), State('age-graph', 'figure'), State('map-graph', 'figure')])
-def filter_graphs(filter_data, time_plot, gender_bar, age_bar, map_graph):
+        [State('the-curve-graph', 'figure'), State('gender-graph', 'figure'), State('age-graph', 'figure'), State('map-graph', 'figure')])
+def filter_graphs(filter_data, the_curve, gender_bar, age_bar, map_graph):
     filters = json.loads(filter_data)
-    return [figures.update_line(data_store, time_plot, filters),
+    if filters.get('granularity_changed'):
+        if filters.get('granularity') == 'landkreis':
+            map_figure = figures.get_main_map_landkreise(data_store)
+        elif filters.get('granularity') == 'bundesland':
+            map_figure = figures.get_main_map_bundeslaender(data_store)
+        else:
+            raise ValueError
+        # update map anyways to apply the correct filter
+        map_figure = figures.update_map(data_store, map_figure, filters)
+    else:
+        map_figure = figures.update_map(data_store, map_graph, filters)
+
+    if filters.get('data_changed'):
+        if filters['data'] == 'total':
+            the_curve_figure = figures.the_curve_line(data_store, filters)
+        else:
+            the_curve_figure = figures.the_curve_bar(data_store, filters)
+    else:
+        the_curve_figure = figures.update_the_curve(data_store, the_curve, filters)
+
+    return [the_curve_figure,
             figures.update_bar(data_store, gender_bar, 'gender', filters),
             figures.update_bar(data_store, age_bar, 'age', filters),
-            figures.update_map(data_store, map_graph, filters)]
+            map_figure]
 
 
 if __name__ == '__main__':

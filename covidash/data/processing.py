@@ -9,8 +9,8 @@ def process_rki_covid_19():
     landkreis_df = pd.read_csv(os.path.join(DATA_DIR, 'raw', 'rki_corona_landkreise.csv'))
     covid_19_df = raw_data_df.merge(landkreis_df[['county', 'OBJECTID', 'GEN']], left_on='Landkreis', right_on='county')
     covid_19_df.Meldedatum = covid_19_df.Meldedatum.astype('datetime64').dt.strftime('%Y-%m-%d')
-    covid_19_df = covid_19_df[['Altersgruppe', 'Geschlecht', 'AnzahlFall', 'AnzahlTodesfall', 'Meldedatum', 'OBJECTID', 'GEN']]
-    covid_19_df.columns = ['age', 'gender', 'cases', 'deaths', 'date', 'OBJECTID', 'GEN']
+    covid_19_df = covid_19_df[['Altersgruppe', 'Geschlecht', 'AnzahlFall', 'AnzahlTodesfall', 'Meldedatum', 'OBJECTID', 'GEN', 'IdBundesland', 'Bundesland']]
+    covid_19_df.columns = ['age', 'gender', 'cases', 'deaths', 'date', 'OBJECTID', 'GEN', 'OBJECTID_1', 'Bundesland']
     covid_19_df.age = covid_19_df.age.astype(str)
     covid_19_df.age = covid_19_df.age.replace({
             'A35-A59': '35 bis 59',
@@ -31,29 +31,31 @@ def process_rki_covid_19_dense():
     covid_19_df = covid_19_df.set_index('date')
     covid_19_df.index = pd.DatetimeIndex(covid_19_df.index)
 
-    dimensions = ['OBJECTID', 'age', 'gender', 'GEN']
+    dimensions = ['OBJECTID_1', 'OBJECTID', 'age', 'gender', 'GEN', 'Bundesland']
 
     # sort for safety of assignments
     covid_19_df = covid_19_df.sort_values(dimensions)
 
     # fill missing dates per dimension
-    covid_19_df = covid_19_df.groupby(['OBJECTID', 'age', 'gender', 'GEN']) \
+    covid_19_df = covid_19_df.groupby(dimensions) \
         .apply(lambda x: x[['cases', 'deaths']].reindex(date_range).fillna(0)) \
-        .reset_index().rename(columns={'level_4': 'date'})
+        .reset_index().rename(columns={'level_{}'.format(len(dimensions)): 'date'})
 
     # calculate total cases until each point in time per dimension
     covid_19_df[['total_cases', 'total_deaths']] = covid_19_df.groupby(dimensions)[['cases', 'deaths']].cumsum()
 
-    # calculate window mean of last 4 days
-    covid_19_df[['cases_window_mean', 'deaths_window_mean']] = covid_19_df.groupby(dimensions)[['cases', 'deaths']].rolling(4, min_periods=1).mean().reset_index()[
-        ['cases', 'deaths']]
-
     # add trend comparing two subsequent days
-    covid_19_df[['cases_trend', 'deaths_trend']] = covid_19_df.groupby(dimensions)[['cases_window_mean', 'deaths_window_mean']] \
-        .apply(lambda x: x[['cases_window_mean', 'deaths_window_mean']] - x[['cases_window_mean', 'deaths_window_mean']].shift(1)) \
-        .reset_index()[['cases_window_mean', 'deaths_window_mean']].fillna(0)
+    covid_19_df[['cases_trend', 'deaths_trend']] = covid_19_df.groupby(dimensions)[['cases', 'deaths']] \
+        .apply(lambda x: x[['cases', 'deaths']] - x[['cases', 'deaths']].shift(1)) \
+        .reset_index()[['cases', 'deaths']].fillna(0)
 
     covid_19_df.to_csv(os.path.join(DATA_DIR, 'processed', 'rki_covid_19_dense.csv'), index=False)
+
+    dimensions = ['OBJECTID_1', 'age', 'gender', 'date', 'Bundesland']
+
+    covid_19_state_df = covid_19_df.groupby(dimensions)[['cases', 'deaths', 'total_cases', 'total_deaths', 'cases_trend', 'deaths_trend']].sum().reset_index()
+
+    covid_19_state_df.to_csv(os.path.join(DATA_DIR, 'processed', 'rki_covid_19_dense_bundeslaender.csv'), index=False)
 
 
 if __name__ == '__main__':
