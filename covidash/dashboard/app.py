@@ -125,9 +125,9 @@ def update_filtering(geo_selection, gender_selection, age_selection, date, data,
         filters['granularity'] = granularity
         if current_granularity != granularity:
             filters['granularity_changed'] = True
-        # clear geo filters
-        if filters.get('geo') is not None:
-            del filters['geo']
+            # clear geo filters
+            if filters.get('geo') is not None:
+                del filters['geo']
     return json.dumps(filters)
 
 
