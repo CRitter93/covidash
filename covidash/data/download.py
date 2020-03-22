@@ -10,7 +10,6 @@ def get_rki_data(url="", file_name=""):
     if not Path(file_name).is_file():
         urllib.request.urlretrieve(url, file_name)
 
-
 def download_rki_covid_19():
     get_rki_data(url='https://opendata.arcgis.com/datasets/dd4580c810204019a7b8eb3e0b329dd6_0.csv',
                  file_name='rki_covid_19.csv')
